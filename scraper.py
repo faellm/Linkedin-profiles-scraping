@@ -107,7 +107,7 @@ def Exec():
       
         #GIT
         
-        page_source = BeautifulSoup(driver.page_source)
+        page_source = BeautifulSoup(driver.page_source, features="lxml")
         profiles = page_source.find_all('a', class_ = 'app-aware-link') 
         #('a', class_ = 'search-result__result-link ember-view')
         all_profile_URL = []
@@ -125,9 +125,8 @@ def Exec():
     GetURL()
     
     # Etapa 3.2: Navegando sobre as paginas e obtendo as URLs
-    
-    
     URLs_all_page = []
+
     for page in range(input_page):
         URLs_one_page = GetURL()
         sleep(2)
@@ -135,21 +134,21 @@ def Exec():
         sleep(3)
         
         # Botão para ir na proxima pagina.
-        next_button = driver.find_element(By.XPATH('//*[@id="ember103"]'))
-        next_button.click()
+        #next_button = driver.find_element(By.XPATH('//*[@id="ember103"]'))
+        #next_button.click()
         
         URLs_all_page = URLs_all_page + URLs_one_page
         sleep(2)
 
     print('- Etapa 3: Coletando as URLs')
 
-
+    
     # Task 4: Obtendo os dados de um perfik e escrevendo no .CSV
     
-    with open('output.csv', 'w',  newline = '') as file_output:
-        headers = ['Name', 'Job Title', 'Location', 'URL']
+    with open('recrutamento.csv', 'w',  newline = '') as file_output:
+        headers = ['Name'],['Job Title'],['Location'], ['URL']
         writer = csv.DictWriter(file_output, delimiter=',', lineterminator='\n',fieldnames=headers)
-        writer.writeheader()
+        #writer.writeheader()
         
         for linkedin_URL in URLs_all_page:
             driver.get(linkedin_URL)
@@ -160,15 +159,15 @@ def Exec():
             try:
                 name = info_div.find('h1', class_='text-heading-xlarge inline t-24 v-align-middle break-words').get_text().strip() #Remove unnecessary characters 
                 print('--- Profile name is: ', name)
-                location = info_div.find('li', class_='t-16 t-black t-normal inline-block').get_text().strip() #Remove unnecessary characters 
+                location = info_div.find('li', class_='pv-text-details__right-panel-item').get_text().strip() #Remove unnecessary characters 
                 print('--- Profile location is: ', location)
-                title = info_div.find('h2', class_='mt1 t-18 t-black t-normal break-words').get_text().strip()
+                title = info_div.find('li', class_='pv-text-details__right-panel-item').get_text().strip()
                 print('--- Profile title is: ', title)
                 writer.writerow({headers[0]:name, headers[1]:location, headers[2]:title, headers[3]:linkedin_URL})
                 print('\n')
             except:
+                print('esse não')
                 
-                break
 
     print('Mission Completed!')
 
@@ -178,10 +177,10 @@ while True:
     
     eventos, valores = window.read()
     #var do input do Layout
-    input_profissional = (eventos,valores[0])
+    input_profissional = (valores[0])
     # input de quantas paginas
-    input_page = 5  
-    print(eventos, valores)
+    input_page = 1  
+    print(valores[0])
     #input_page = (eventos, valores[5])  
     
     if eventos == sg.WINDOW_CLOSED:
@@ -190,7 +189,7 @@ while True:
         break
         
     
-    if eventos == 'Pesquisar':
+    if eventos == 'Buscar':
         Exec()
         print('tudo correto.')
         break
