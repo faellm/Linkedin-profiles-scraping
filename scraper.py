@@ -5,8 +5,6 @@ from selenium.webdriver.common.by import By
 from bs4 import BeautifulSoup
 from selenium.webdriver.chrome.options import Options
 from PySimpleGUI import PySimpleGUI as sg
-from selenium import webdriver
-from webdriver_manager.chrome import ChromeDriverManager
 from time import sleep
 import csv
 from data import *
@@ -17,6 +15,7 @@ options.add_argument("--headless")
 options.add_argument( 'options.add_argument( window-size=1200 x 600 )' )
 
 # Etapa 1: Login no Linkedin e interface
+
 #  Definindo tema
 sg.theme('Reddit')
 layout = [
@@ -28,25 +27,24 @@ layout = [
 #Justando janela do PySimpleGUI
 window = sg.Window('Linkedin Scraping', layout)
 
-# Etapa 1.2: Importando o usuario e a senha
-credential = open('credentials.txt')
-line = credential.readlines()
-username = line[0]
-password = line[1]
-print('- Importou as credenciais')
-sleep(2)
-
-# Etapa 1.1: Inserindo o usuario e senha
+# Etapa 1.2: Inserindo o usuario e senha
 def Exec():
-    
-    # Etapa 1.2: Abrindo o navegador e acessando a pagina de login do Linkedin
-    driver = webdriver.Chrome(ChromeDriverManager().install(), chrome_options=options)
+    # Etapa 1.1: Abrindo o navegador e acessando a pagina de login do Linkedin
+    driver = webdriver.Chrome('/Users/rafaellaramartins/Desktop/99freelas/chromedriver - cópia', chrome_options=options)
     sleep(2)
     url = 'https://www.linkedin.com'
     driver.get(url)
     print('- Iniciou o Chrome')
     sleep(2)
 
+    # Etapa 1.2: Importando o usuario e a senha
+    credential = open('credentials.txt')
+    line = credential.readlines()
+    username = line[0]
+    password = line[1]
+    print('- Importou as credenciais')
+    sleep(2)
+    # meu
     
     entrar = driver.find_element(By.ID, input_user)
     entrar.send_keys(username)
@@ -60,6 +58,26 @@ def Exec():
     sleep(1)
     buttun_entrar.click()
     sleep(5)
+    
+    
+    
+    # GIT
+    '''
+    email_field = driver.find_element(By.ID, ('username'))
+    email_field.send_keys(username)
+    print('- insiriu o email')
+    sleep(3)
+
+    password_field = driver.find_element(By.ID, ('password'))
+    password_field.send_keys(password)
+    print('- Insiriu a senha')
+    sleep(2)
+
+    # Epata 1.2: Clicando no botão 'entrar'
+    buttun_entrar= driver. find_element(By.CLASS_NAME, ('btn__primary--large from__button--floating'))
+    buttun_entrar.click()
+    sleep(3)
+    '''
 
     print('- Etapa 1 : Concluida')
 
@@ -67,10 +85,28 @@ def Exec():
     # Etapa 2.1: Formatando URL para direcionar
     url_people = f'https://www.linkedin.com/search/results/people/?keywords={input_profissional}'
     driver.get(url_people)
-    print('- Etapa 2, concluida.')
+
 # Etapa 3: Scraping das URL dos perfils
 # Etapa 3.1: Função para extrair a url de uma pagina
     def GetURL():
+        '''
+          #ME
+        page_source = BeautifulSoup(driver.page_source, features="lxml")
+        
+        #div com o produto
+        #profiles = page_source.findAll('div', attrs={'class': 'entity-result__item'})
+        #selecionando o link em uma variavel(link)
+        links = page_source.find_all('a', attrs={'class':'app-aware-link  scale-down '})
+        for link in links:
+                     
+            print('Link do perfil:',link['href'])
+                
+            print('\n\n')
+        
+        '''
+      
+        #GIT
+        
         page_source = BeautifulSoup(driver.page_source, features="lxml")
         profiles = page_source.find_all('a', class_ = 'app-aware-link') 
         #('a', class_ = 'search-result__result-link ember-view')
@@ -108,69 +144,33 @@ def Exec():
 
     
     # Task 4: Obtendo os dados de um perfik e escrevendo no .CSV
-    def get_data():
-        
-        with open('output.csv', 'w',  newline = '') as file_output:
-            headers = ['Name','Job Title','Location', 'URL']
-            writer = csv.DictWriter(file_output, delimiter=',', lineterminator='\n',fieldnames=headers)
-            
-            
-            for linkedin_URL in URLs_all_page:
-                writer.writeheader()
-                #get esta aqui
-                driver.get(linkedin_URL)
-                print('---------------------------------------')
-                print('- Accessing profile: ', linkedin_URL)
-                sleep(3)
-                page_source = BeautifulSoup(driver.page_source, "html.parser")
-                info_div = page_source.find('div',{'class':'ph5 pb5'})
-                
-                try:
-                    name = info_div.find('h1', class_='text-heading-xlarge inline t-24 v-align-middle break-words').get_text().strip() #Remove unnecessary characters 
-                    print('- Nome: ', name)
-                    location = info_div.find('span', class_='text-body-small inline t-black--light break-words').get_text().strip() #Remove unnecessary characters 
-                    print('- Local: ', location)
-                    title = info_div.find('li', class_='pv-text-details__right-panel-item').get_text().strip()
-                    print('- Titulo: ', title)
-                    writer.writerow({headers[0]:name, headers[1]:location, headers[2]:title, headers[3]:linkedin_URL})
-                    print('\n')
-                    print('---------------------------------------')
-                except:
-                    pass
     
-    get_data()
-    
-    def data_page2():
+    with open('recrutamento.csv', 'w',  newline = '') as file_output:
+        headers = ['Name'],['Job Title'],['Location'], ['URL']
+        writer = csv.DictWriter(file_output, delimiter=';', lineterminator='\n',fieldnames=headers)
+        writer.writeheader()
         
-        with open('output.csv', 'w',  newline = '') as file_output:
-            headers = ['Name','Job Title','Location', 'URL']
-            writer = csv.DictWriter(file_output, delimiter=',', lineterminator='\n',fieldnames=headers)
-            
-            
-            for linkedin_URL in URLs_all_page:
-                writer.writeheader()
-                #get esta aqui
-                driver.get(f'https://www.linkedin.com/search/results/people/?keywords={input_profissional}&page=2')
+        for linkedin_URL in URLs_all_page:
+            driver.get(linkedin_URL)
+            print('---------------------------------------')
+            print('- Link: ', linkedin_URL)
+            sleep(3)
+            page_source = BeautifulSoup(driver.page_source, "html.parser")
+            info_div = page_source.find('div',{'class':'ph5 pb5'})
+            try:
+                name = info_div.find('h1', class_='text-heading-xlarge inline t-24 v-align-middle break-words').get_text().strip() #Remove unnecessary characters 
+                print('--- Profile name is: ', name)
+                location = info_div.find('span', class_='text-body-small inline t-black--light break-words').get_text().strip() #Remove unnecessary characters 
+                print('--- Localização: ', location)
+                title = info_div.find('li', class_='pv-text-details__right-panel-item').get_text().strip()
+                print('--- Titulo: ', title)
+                writer.writerow({headers[0]:name, headers[1]:title, headers[2]:location, headers[3]:linkedin_URL})
+                print('\n')
                 print('---------------------------------------')
-                print('- Accessing profile: ', linkedin_URL)
-                sleep(3)
-                page_source = BeautifulSoup(driver.page_source, "html.parser")
-                info_div = page_source.find('div',{'class':'ph5 pb5'})
+            except:
+                print('esse não')
                 
-                try:
-                    name = info_div.find('h1', class_='text-heading-xlarge inline t-24 v-align-middle break-words').get_text().strip() #Remove unnecessary characters 
-                    print('- Nome: ', name)
-                    location = info_div.find('span', class_='text-body-small inline t-black--light break-words').get_text().strip() #Remove unnecessary characters 
-                    print('- Local: ', location)
-                    title = info_div.find('li', class_='pv-text-details__right-panel-item').get_text().strip()
-                    print('- Titulo: ', title)
-                    writer.writerow({headers[0]:name, headers[1]:location, headers[2]:title, headers[3]:linkedin_URL})
-                    print('\n')
-                    print('---------------------------------------')
-                except:
-                    pass
-                    
-    data_page2()
+
     print('Mission Completed!')
 
 #Ler os eventos do front end
