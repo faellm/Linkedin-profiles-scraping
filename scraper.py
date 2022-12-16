@@ -108,35 +108,69 @@ def Exec():
 
     
     # Task 4: Obtendo os dados de um perfik e escrevendo no .CSV
-    
-    with open('output.csv', 'w',  newline = '') as file_output:
-        headers = ['Name','Job Title','Location', 'URL']
-        writer = csv.DictWriter(file_output, delimiter=',', lineterminator='\n',fieldnames=headers)
+    def get_data():
         
-        
-        for linkedin_URL in URLs_all_page:
-            writer.writeheader()
-            driver.get(linkedin_URL)
-            print('---------------------------------------')
-            print('- Accessing profile: ', linkedin_URL)
-            sleep(3)
-            page_source = BeautifulSoup(driver.page_source, "html.parser")
-            info_div = page_source.find('div',{'class':'ph5 pb5'})
+        with open('output.csv', 'w',  newline = '') as file_output:
+            headers = ['Name','Job Title','Location', 'URL']
+            writer = csv.DictWriter(file_output, delimiter=',', lineterminator='\n',fieldnames=headers)
             
-            try:
-                name = info_div.find('h1', class_='text-heading-xlarge inline t-24 v-align-middle break-words').get_text().strip() #Remove unnecessary characters 
-                print('- Nome: ', name)
-                location = info_div.find('span', class_='text-body-small inline t-black--light break-words').get_text().strip() #Remove unnecessary characters 
-                print('- Local: ', location)
-                title = info_div.find('li', class_='pv-text-details__right-panel-item').get_text().strip()
-                print('- Titulo: ', title)
-                writer.writerow({headers[0]:name, headers[1]:location, headers[2]:title, headers[3]:linkedin_URL})
-                print('\n')
+            
+            for linkedin_URL in URLs_all_page:
+                writer.writeheader()
+                #get esta aqui
+                driver.get(linkedin_URL)
                 print('---------------------------------------')
-            except:
-                pass
+                print('- Accessing profile: ', linkedin_URL)
+                sleep(3)
+                page_source = BeautifulSoup(driver.page_source, "html.parser")
+                info_div = page_source.find('div',{'class':'ph5 pb5'})
                 
-
+                try:
+                    name = info_div.find('h1', class_='text-heading-xlarge inline t-24 v-align-middle break-words').get_text().strip() #Remove unnecessary characters 
+                    print('- Nome: ', name)
+                    location = info_div.find('span', class_='text-body-small inline t-black--light break-words').get_text().strip() #Remove unnecessary characters 
+                    print('- Local: ', location)
+                    title = info_div.find('li', class_='pv-text-details__right-panel-item').get_text().strip()
+                    print('- Titulo: ', title)
+                    writer.writerow({headers[0]:name, headers[1]:location, headers[2]:title, headers[3]:linkedin_URL})
+                    print('\n')
+                    print('---------------------------------------')
+                except:
+                    pass
+    
+    get_data()
+    
+    def data_page2():
+        
+        with open('output.csv', 'w',  newline = '') as file_output:
+            headers = ['Name','Job Title','Location', 'URL']
+            writer = csv.DictWriter(file_output, delimiter=',', lineterminator='\n',fieldnames=headers)
+            
+            
+            for linkedin_URL in URLs_all_page:
+                writer.writeheader()
+                #get esta aqui
+                driver.get(f'https://www.linkedin.com/search/results/people/?keywords={input_profissional}&page=2')
+                print('---------------------------------------')
+                print('- Accessing profile: ', linkedin_URL)
+                sleep(3)
+                page_source = BeautifulSoup(driver.page_source, "html.parser")
+                info_div = page_source.find('div',{'class':'ph5 pb5'})
+                
+                try:
+                    name = info_div.find('h1', class_='text-heading-xlarge inline t-24 v-align-middle break-words').get_text().strip() #Remove unnecessary characters 
+                    print('- Nome: ', name)
+                    location = info_div.find('span', class_='text-body-small inline t-black--light break-words').get_text().strip() #Remove unnecessary characters 
+                    print('- Local: ', location)
+                    title = info_div.find('li', class_='pv-text-details__right-panel-item').get_text().strip()
+                    print('- Titulo: ', title)
+                    writer.writerow({headers[0]:name, headers[1]:location, headers[2]:title, headers[3]:linkedin_URL})
+                    print('\n')
+                    print('---------------------------------------')
+                except:
+                    pass
+                    
+    data_page2()
     print('Mission Completed!')
 
 #Ler os eventos do front end
