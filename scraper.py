@@ -147,7 +147,7 @@ def Exec():
     
     with open('recrutamento.csv', 'w',  newline = '') as file_output:
         headers = ['Name'],['Job Title'],['Location'], ['URL']
-        writer = csv.DictWriter(file_output, delimiter=',', lineterminator='\n',fieldnames=headers)
+        writer = csv.DictWriter(file_output, delimiter=';', lineterminator='\n',fieldnames=headers)
         #writer.writeheader()
         
         for linkedin_URL in URLs_all_page:
