@@ -8,10 +8,12 @@ from PySimpleGUI import PySimpleGUI as sg
 from time import sleep
 import csv
 from data import *
+from selenium.webdriver.chrome.service import Service as ChromeService
+from webdriver_manager.chrome import ChromeDriverManager
 print('- Importou todas as bibliotecas')
 
 options = webdriver.ChromeOptions()
-options.add_argument("--headless")
+#options.add_argument("--headless")
 options.add_argument( 'options.add_argument( window-size=1200 x 600 )' )
 
 # Etapa 1: Login no Linkedin e interface
@@ -30,7 +32,7 @@ window = sg.Window('Linkedin Scraping', layout)
 # Etapa 1.2: Inserindo o usuario e senha
 def Exec():
     # Etapa 1.1: Abrindo o navegador e acessando a pagina de login do Linkedin
-    driver = webdriver.Chrome('/Users/rafaellaramartins/Desktop/99freelas/chromedriver - cópia', chrome_options=options)
+    driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), chrome_options=options)
     sleep(2)
     url = 'https://www.linkedin.com'
     driver.get(url)
@@ -127,7 +129,7 @@ def Exec():
     # Etapa 3.2: Navegando sobre as paginas e obtendo as URLs
     URLs_all_page = []
 
-    for page in range(input_page):
+    for page in range(1,5):
         URLs_one_page = GetURL()
         sleep(2)
         driver.execute_script('window.scrollTo(0, document.body.scrollHeight);') #scroll to the end of the page
@@ -146,11 +148,12 @@ def Exec():
     # Task 4: Obtendo os dados de um perfik e escrevendo no .CSV
     
     with open('recrutamento.csv', 'w',  newline = '') as file_output:
-        headers = ['Name'],['Job Title'],['Location'], ['URL']
-        writer = csv.DictWriter(file_output, delimiter=';', lineterminator='\n',fieldnames=headers)
+        headers = ['Name','Job Title','Location', 'URL', 'Telefone']
+        writer = csv.DictWriter(file_output, delimiter=',', lineterminator='\n',fieldnames=headers)
         writer.writeheader()
         
         for linkedin_URL in URLs_all_page:
+            
             driver.get(linkedin_URL)
             print('---------------------------------------')
             print('- Link: ', linkedin_URL)
@@ -164,11 +167,24 @@ def Exec():
                 print('--- Localização: ', location)
                 title = info_div.find('li', class_='pv-text-details__right-panel-item').get_text().strip()
                 print('--- Titulo: ', title)
-                writer.writerow({headers[0]:name, headers[1]:title, headers[2]:location, headers[3]:linkedin_URL})
-                print('\n')
-                print('---------------------------------------')
+                #Contatos
+                btn_informacao = driver.find_element(By.ID, 'top-card-text-details-contact-info').click()
+                page_source = BeautifulSoup(driver.page_source, "html.parser")
+                pop_up = page_source.find('div', class_='pv-profile-section__section-info section-info')
+                fone = pop_up.find('ul', class_='list-style-none').get_text().strip()
+                print(fone)
+                email = pop_up.find('a', class_='pv-contact-info__contact-link link-without-visited-state t-14').get_text().strip()
+                print(email)
+                instantania = pop_up.find('ul', class_='list-style-none').get_text().strip()
+                print(instantania)
+                sleep(1)
             except:
-                print('esse não')
+                pass  
+                     
+            writer.writerow({headers[0]:name, headers[1]:fone, headers[2]:title, headers[3]:location, headers[4]:linkedin_URL})
+            print('\n')
+            print('---------------------------------------')
+            
                 
 
     print('Mission Completed!')
