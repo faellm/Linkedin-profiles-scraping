@@ -7,13 +7,14 @@ from selenium.webdriver.chrome.options import Options
 from PySimpleGUI import PySimpleGUI as sg
 from time import sleep
 import csv
+from openpyxl import Workbook, load_workbook
 from data import *
 from selenium.webdriver.chrome.service import Service as ChromeService
 from webdriver_manager.chrome import ChromeDriverManager
 print('- Importou todas as bibliotecas')
 
 options = webdriver.ChromeOptions()
-#options.add_argument("--headless")
+options.add_argument("--headless")
 options.add_argument( 'options.add_argument( window-size=1200 x 600 )' )
 
 # Etapa 1: Login no Linkedin e interface
@@ -51,36 +52,24 @@ def Exec():
     entrar = driver.find_element(By.ID, input_user)
     entrar.send_keys(username)
 
-    sleep(3)
+    sleep(4)
 
     senha = driver.find_element(By.ID, input_pass)
     senha.send_keys(password)
 
     buttun_entrar= driver. find_element(By.CLASS_NAME, btn_entrar)
-    sleep(1)
+    sleep(2)
     buttun_entrar.click()
     sleep(5)
     
-    
-    
-    # GIT
-    '''
-    email_field = driver.find_element(By.ID, ('username'))
-    email_field.send_keys(username)
-    print('- insiriu o email')
-    sleep(3)
-
-    password_field = driver.find_element(By.ID, ('password'))
-    password_field.send_keys(password)
-    print('- Insiriu a senha')
-    sleep(2)
-
-    # Epata 1.2: Clicando no botão 'entrar'
-    buttun_entrar= driver. find_element(By.CLASS_NAME, ('btn__primary--large from__button--floating'))
-    buttun_entrar.click()
-    sleep(3)
-    '''
-
+    try:
+        btn_captch = driver.find_element(By.ID, 'home_children_button')
+        print('favor resolver captcha.')
+        for i in range(0,60):
+            print('60 segundos para realizar o captcha')
+            print('Time:', i)
+    except:
+        pass
     print('- Etapa 1 : Concluida')
 
     # Etapa 2: Indo para a pagina com todas as pessoas da área
@@ -91,24 +80,7 @@ def Exec():
 # Etapa 3: Scraping das URL dos perfils
 # Etapa 3.1: Função para extrair a url de uma pagina
     def GetURL():
-        '''
-          #ME
-        page_source = BeautifulSoup(driver.page_source, features="lxml")
-        
-        #div com o produto
-        #profiles = page_source.findAll('div', attrs={'class': 'entity-result__item'})
-        #selecionando o link em uma variavel(link)
-        links = page_source.find_all('a', attrs={'class':'app-aware-link  scale-down '})
-        for link in links:
-                     
-            print('Link do perfil:',link['href'])
-                
-            print('\n\n')
-        
-        '''
-      
-        #GIT
-        
+
         page_source = BeautifulSoup(driver.page_source, features="lxml")
         profiles = page_source.find_all('a', class_ = 'app-aware-link') 
         #('a', class_ = 'search-result__result-link ember-view')
@@ -122,14 +94,13 @@ def Exec():
             
         return all_profile_URL
         
-        
-    
     GetURL()
     
     # Etapa 3.2: Navegando sobre as paginas e obtendo as URLs
     URLs_all_page = []
 
-    for page in range(1,5):
+    for page in range(0,6):
+        
         URLs_one_page = GetURL()
         sleep(2)
         driver.execute_script('window.scrollTo(0, document.body.scrollHeight);') #scroll to the end of the page
@@ -140,50 +111,56 @@ def Exec():
         #next_button.click()
         
         URLs_all_page = URLs_all_page + URLs_one_page
-        sleep(2)
+        sleep(3)
 
     print('- Etapa 3: Coletando as URLs')
 
     
     # Task 4: Obtendo os dados de um perfik e escrevendo no .CSV
     
-    with open('recrutamento.csv', 'w',  newline = '') as file_output:
-        headers = ['Name','Job Title','Location', 'URL', 'Telefone']
-        writer = csv.DictWriter(file_output, delimiter=',', lineterminator='\n',fieldnames=headers)
-        writer.writeheader()
+
         
-        for linkedin_URL in URLs_all_page:
+    for linkedin_URL in URLs_all_page:
             
-            driver.get(linkedin_URL)
-            print('---------------------------------------')
-            print('- Link: ', linkedin_URL)
-            sleep(3)
+        driver.get(linkedin_URL)
+        sleep(3)
+        print('---------------------------------------')
+        print('- Link: ', linkedin_URL)
+        sleep(3)
+        page_source = BeautifulSoup(driver.page_source, "html.parser")
+        info_div = page_source.find('div',{'class':'ph5 pb5'})
+        try:
+            nome = info_div.find('h1', class_='text-heading-xlarge inline t-24 v-align-middle break-words').get_text().strip() #Remove unnecessary characters 
+            print('--- Profile name is: ', nome)
+            location = info_div.find('span', class_='text-body-small inline t-black--light break-words').get_text().strip() #Remove unnecessary characters 
+            print('--- Localização: ', location)
+            title = info_div.find('li', class_='pv-text-details__right-panel-item').get_text().strip()
+            print('--- Titulo: ', title)
+            #Contatos
+            btn_informacao = driver.find_element(By.ID, 'top-card-text-details-contact-info').click()
             page_source = BeautifulSoup(driver.page_source, "html.parser")
-            info_div = page_source.find('div',{'class':'ph5 pb5'})
-            try:
-                name = info_div.find('h1', class_='text-heading-xlarge inline t-24 v-align-middle break-words').get_text().strip() #Remove unnecessary characters 
-                print('--- Profile name is: ', name)
-                location = info_div.find('span', class_='text-body-small inline t-black--light break-words').get_text().strip() #Remove unnecessary characters 
-                print('--- Localização: ', location)
-                title = info_div.find('li', class_='pv-text-details__right-panel-item').get_text().strip()
-                print('--- Titulo: ', title)
-                #Contatos
-                btn_informacao = driver.find_element(By.ID, 'top-card-text-details-contact-info').click()
-                page_source = BeautifulSoup(driver.page_source, "html.parser")
-                pop_up = page_source.find('div', class_='pv-profile-section__section-info section-info')
-                fone = pop_up.find('ul', class_='list-style-none').get_text().strip()
-                print(fone)
-                email = pop_up.find('a', class_='pv-contact-info__contact-link link-without-visited-state t-14').get_text().strip()
-                print(email)
-                instantania = pop_up.find('ul', class_='list-style-none').get_text().strip()
-                print(instantania)
-                sleep(1)
-            except:
-                pass  
+            pop_up = page_source.find('div', class_='pv-profile-section__section-info section-info')
+            fone = pop_up.find('ul', class_='list-style-none').get_text().strip()
+            print(fone)
+            email = pop_up.find('a', class_='pv-contact-info__contact-link link-without-visited-state t-14').get_text().strip()
+            print(email)
+            instantania = pop_up.find('ul', class_='list-style-none').get_text().strip()
+            print(instantania)
+            sleep(1)
+            
+            
+            
+            with open('recrutamento.csv', 'w',  newline = '') as file_output:
+                headers = ['Name','Job Title','Location', 'URL', 'Telefone', 'Email']
+                writer = csv.DictWriter(file_output, delimiter=',', lineterminator='\n',fieldnames=headers)
+                writer.writeheader()
+                writer.writerow({headers[1]:nome, headers[2]:title, headers[3]:location, headers[4]:linkedin_URL, headers[5]:fone, headers[6]:email})
+                print('\n')
+                print('---------------------------------------')
+        except:
+            pass  
                      
-            writer.writerow({headers[0]:name, headers[1]:fone, headers[2]:title, headers[3]:location, headers[4]:linkedin_URL})
-            print('\n')
-            print('---------------------------------------')
+        
             
                 
 
